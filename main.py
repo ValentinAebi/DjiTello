@@ -1,4 +1,5 @@
 import sys
+import time
 from threading import Thread
 
 import cv2
@@ -8,10 +9,7 @@ from djitellopy import Tello
 from pynput.keyboard import Key, Listener
 
 stream = True
-takeoff = False
 land_or_emergency = False
-
-# TODO try reimplementing using pygame events
 
 
 def refresh_rc_signals():
@@ -22,25 +20,45 @@ def print_battery_level():
     print(f"Battery: {tello.get_battery()}%")
 
 
-def handle_key_pressed(key):
-    global land_or_emergency, takeoff
+def main_keyboard_listener_func(key):
+    global land_or_emergency
     if key == Key.space:
         land_or_emergency = True
-    elif key == Key.ctrl_l:
-        takeoff = True
     elif key == Key.backspace:
         tello.emergency()
         land_or_emergency = True
 
 
 def stream_video():
+    frame_read = tello.get_frame_read()
     global stream
     while stream:
-        img = tello.get_frame_read().frame
+        img = frame_read.frame
         img = cv2.resize(img, (1080, 720))
         cv2.imshow("Tello", img)
-        cv2.waitKey(1)
+        cv2.waitKey(1000//30)
     tello.streamoff()
+
+
+def fly():
+    try:
+        while not land_or_emergency:
+            refresh_rc_signals()
+            tello.send_rc_control(roll(), pitch(), throttle(), yaw())
+    finally:
+        if tello.is_flying:
+            tello.land()
+        print_battery_level()
+        main_keyboard_listener.stop()
+        takeoff_keyboard_listener.stop()
+
+
+def takeoff_keyboard_listener_func(key):
+    if key == Key.ctrl_l:
+        tello.takeoff()
+        winsound.Beep(500, 1000)
+        print("takeoff completed", file=sys.stderr)
+        fly()
 
 
 if __name__ == '__main__':
@@ -86,25 +104,14 @@ if __name__ == '__main__':
     video_thread = Thread(target=stream_video)
     video_thread.start()
 
-    keyboard_listener = Listener(on_press=handle_key_pressed)
-    keyboard_listener.start()
+    main_keyboard_listener = Listener(on_press=main_keyboard_listener_func)
+    main_keyboard_listener.start()
 
-    while not takeoff:
-        pass
+    takeoff_keyboard_listener = Listener(on_press=takeoff_keyboard_listener_func)
+    takeoff_keyboard_listener.start()
 
-    tello.takeoff()
-    winsound.Beep(500, 1000)
-    print("takeoff completed", file=sys.stderr)
-
-    try:
-        while not land_or_emergency:
-            refresh_rc_signals()
-            tello.send_rc_control(roll(), pitch(), throttle(), yaw())
-    finally:
-        if tello.is_flying:
-            tello.land()
-        print_battery_level()
-        stream = False
-        pygame.quit()
-        keyboard_listener.stop()
-        video_thread.join()
+    takeoff_keyboard_listener.join()
+    main_keyboard_listener.join()
+    stream = False
+    video_thread.join()
+    pygame.quit()
