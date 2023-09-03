@@ -1,5 +1,4 @@
 import sys
-import time
 from threading import Thread
 
 import cv2
@@ -22,9 +21,9 @@ def print_battery_level():
 
 def main_keyboard_listener_func(key):
     global land_or_emergency
-    if key == Key.space:
+    if key == Key.esc:
         land_or_emergency = True
-    elif key == Key.backspace:
+    elif key == Key.print_screen:
         tello.emergency()
         land_or_emergency = True
 
@@ -54,7 +53,7 @@ def fly():
 
 
 def takeoff_keyboard_listener_func(key):
-    if key == Key.ctrl_l:
+    if key == Key.delete:
         tello.takeoff()
         winsound.Beep(500, 1000)
         print("takeoff completed", file=sys.stderr)
