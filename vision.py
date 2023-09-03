@@ -19,7 +19,9 @@ detector = cv2.SimpleBlobDetector_create(params)
 def process_image(frame: MatLike) -> Union[Tuple[Tuple[float, float], float, MatLike], None]:
     """
     :param frame: OpenCV frame
-    :return: if a shape matching the criteria has been detected, a tuple
+    :return: if a shape matching the criteria has been detected, a tuple (px, py), size, img
+                where px, py are the position of the shape on the image (on the interval [-0.5, 0.5]),
+                size is the size of the shape and img is `frame` with the detected shapes highlighted on it
     """
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     keypoints: List[cv2.KeyPoint] = detector.detect(gray)
