@@ -10,6 +10,12 @@ from pynput.keyboard import Key, Listener
 stream = True
 land_or_emergency = False
 
+# This script converts the commands of a joystick (intended to be an RC controller connected to the computer) into
+# channel values that are sent to the Tello.
+
+# WARNING: The scripts in this repo do not guarantee that the Tello drone behaves safely during their execution.
+# WARNING: Depending on the joystick/controller, the mapping of the RC channels may need to be updated.
+
 
 def refresh_rc_signals():
     pygame.event.pump()

@@ -8,6 +8,11 @@ import vision
 
 land_cmd_given = False
 
+# This script uses computer vision to make the drone follow a small circle (typically a 4 cm diameter circle on a
+# sheet of paper, with contrasting colors).
+
+# WARNING: The scripts in this repo do not guarantee that the Tello drone behaves safely during their execution.
+
 
 def print_battery_level():
     print(f"Battery: {tello.get_battery()}%")
